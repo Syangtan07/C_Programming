@@ -1,0 +1,350 @@
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#error "This code is specific to Windows platforms."
+#endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define MAX_SIZE 10000 // Define maximum size for the array
+
+typedef struct ListNode {
+    int data;
+    struct ListNode *next;
+} ListNode;
+
+long long timeSpec_diff_ns(LARGE_INTEGER start, LARGE_INTEGER end, LARGE_INTEGER freq) {
+    return (end.QuadPart - start.QuadPart) * 1000000000LL / freq.QuadPart;
+}
+
+// Array Operations
+void insert_array(int arr[], int *size, int data) {
+    if (*size >= MAX_SIZE) {
+        printf("Array is full. Insertion failed.\n");
+        return;
+    }
+
+    for (int i = *size; i > 0; i--) {
+        arr[i] = arr[i - 1];  // Shift elements to the right
+    }
+    arr[0] = data;  // Insert at the beginning of the array
+    (*size)++;
+}
+
+void delete_array(int arr[], int *size, int position) {
+    if (*size == 0) {
+        printf("Array is empty. Deletion failed.\n");
+        return;
+    }
+
+    if (position < 0 || position >= *size) {
+        printf("Invalid position. Deletion failed.\n");
+        return;
+    }
+
+    for (int i = position; i < *size - 1; i++) {
+        arr[i] = arr[i + 1];
+    }
+    (*size)--;
+}
+
+void traverse_array(int arr[], int size) {
+    printf("Array Elements: ");
+    for (int i = 0; i < size; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+}
+
+// Linked List Operations
+ListNode *insert_node(ListNode **head, int data) {
+    ListNode *new_node = (ListNode *)malloc(sizeof(ListNode));
+    if (new_node == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+    new_node->data = data;
+    new_node->next = NULL;
+
+    if (*head == NULL) {
+        *head = new_node;
+        return new_node;
+    }
+
+    ListNode *current = *head;
+    while (current->next != NULL) {
+        current = current->next;
+    }
+    current->next = new_node;
+
+    return new_node;
+}
+
+void delete_node(ListNode **head, int position) {
+    if (*head == NULL) {
+        printf("Linked list is empty. Deletion failed.\n");
+        return;
+    }
+
+    if (position == 0) {
+        ListNode *temp = *head;
+        *head = (*head)->next;
+        free(temp);
+        return;
+    }
+
+    ListNode *current = *head;
+    for (int i = 0; i < position - 1 && current->next != NULL; i++) {
+        current = current->next;
+    }
+
+    if (current->next == NULL) {
+        printf("Invalid position. Deletion failed.\n");
+        return;
+    }
+
+    ListNode *temp = current->next;
+    current->next = current->next->next;
+    free(temp);
+}
+
+void traverse_linkedlist(ListNode *head) {
+    printf("Linked List Elements: ");
+    ListNode *current = head;
+    while (current != NULL) {
+        printf("%d ", current->data);
+        current = current->next;
+    }
+    printf("\n");
+}
+
+// Sorting and Searching Operations
+void bubblesort_array(int arr[], int size) {
+    for (int i = 0; i < size - 1; i++) {
+        for (int j = 0; j < size - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+    printf("Sorted Array Elements: ");
+    traverse_array(arr, size); // Display sorted array
+}
+
+void bubblesort_linkedlist(ListNode *head) {
+    int swapped;
+    ListNode *ptr1;
+    ListNode *lptr = NULL;
+
+    if (head == NULL)
+        return;
+
+    do {
+        swapped = 0;
+        ptr1 = head;
+
+        while (ptr1->next != lptr) {
+            if (ptr1->data > ptr1->next->data) {
+                int temp = ptr1->data;
+                ptr1->data = ptr1->next->data;
+                ptr1->next->data = temp;
+                swapped = 1;
+            }
+            ptr1 = ptr1->next;
+        }
+        lptr = ptr1;
+    } while (swapped);
+
+    printf("Sorted Linked List Elements: ");
+    traverse_linkedlist(head); // Display sorted linked list
+}
+
+int binary_search_array(int arr[], int target, int size) {
+    int first = 0;
+    int last = size - 1;
+    while (first <= last) {
+        int midpoint = (first + last) / 2;
+        if (arr[midpoint] == target) {
+            return midpoint;
+        } else if (target > arr[midpoint]) {
+            first = midpoint + 1;
+        } else {
+            last = midpoint - 1;
+        }
+    }
+    return -1; // Target not found
+}
+
+int binary_search_linkedlist(ListNode *head, int target) {
+    int index = 0;
+    ListNode *current = head;
+    while (current != NULL) {
+        if (current->data == target) {
+            return index;
+        }
+        current = current->next;
+        index++;
+    }
+    return -1; // Target not found
+}
+
+void free_linkedlist(ListNode *head) {
+    ListNode *current = head;
+    while (current != NULL) {
+        ListNode *temp = current;
+        current = current->next;
+        free(temp);
+    }
+}
+
+int main() {
+    int arr[MAX_SIZE]; // Array declaration
+    ListNode *head = NULL; // Linked list declaration
+
+    int size;
+    printf("Enter Size of data (up to %d): ", MAX_SIZE);
+    scanf("%d", &size);
+
+    if (size <= 0 || size > MAX_SIZE) {
+        printf("Invalid size. Size should be greater than 0 and at most %d.\n", MAX_SIZE);
+        return 1; // Exit with error code
+    }
+
+    srand(time(NULL));
+
+    // Generate unique random numbers within the specified range and insert into array and linked list
+    int used[MAX_SIZE] = {0}; // Track used numbers
+    int count = 0;
+    while (count < size) {
+        int randomNum = rand() % size; // Generate random number within the range [0, size - 1]
+        if (!used[randomNum]) {
+            used[randomNum] = 1;
+            arr[count] = randomNum + 1; // Adjust the range to [1, size]
+            insert_node(&head, randomNum + 1);
+            count++;
+        }
+    }
+
+    int choice;
+    int data;
+
+    LARGE_INTEGER freq;
+    QueryPerformanceFrequency(&freq);
+
+    do {
+        printf("\nMenu:\n");
+        printf("1. Insert element in array\n");
+        printf("2. Delete element from array\n");
+        printf("3. Traverse array\n");
+        printf("4. Insert node in linked list\n");
+        printf("5. Delete node from linked list\n");
+        printf("6. Traverse linked list\n");
+        printf("7. Sort array and linked list\n");
+        printf("8. Perform binary search\n");
+        printf("9. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        LARGE_INTEGER start, end;
+
+        if (choice == 1) {
+            printf("Enter data: ");
+            scanf("%d", &data);
+            QueryPerformanceCounter(&start);
+            insert_array(arr, &size, data);
+            QueryPerformanceCounter(&end);
+            long long nanoseconds = timeSpec_diff_ns(start, end, freq);
+            printf("Time taken for array insertion: %lld nanoseconds\n", nanoseconds);
+        } else if (choice == 2) {
+            int position;
+            printf("Enter position: ");
+            scanf("%d", &position);
+            QueryPerformanceCounter(&start);
+            delete_array(arr, &size, position);
+            QueryPerformanceCounter(&end);
+            long long nanoseconds = timeSpec_diff_ns(start, end, freq);
+            printf("Time taken for array deletion: %lld nanoseconds\n", nanoseconds);
+        } else if (choice == 3) {
+            QueryPerformanceCounter(&start);
+            traverse_array(arr, size);
+            QueryPerformanceCounter(&end);
+            long long nanoseconds = timeSpec_diff_ns(start, end, freq);
+            printf("Time taken for array traversal: %lld nanoseconds\n", nanoseconds);
+        } else if (choice == 4) {
+            printf("Enter data: ");
+            scanf("%d", &data);
+            QueryPerformanceCounter(&start);
+            insert_node(&head, data);
+            QueryPerformanceCounter(&end);
+            long long nanoseconds = timeSpec_diff_ns(start, end, freq);
+            printf("Time taken for linked list insertion: %lld nanoseconds\n", nanoseconds);
+        } else if (choice == 5) {
+            int position;
+            printf("Enter position: ");
+            scanf("%d", &position);
+            QueryPerformanceCounter(&start);
+            delete_node(&head, position);
+            QueryPerformanceCounter(&end);
+            long long nanoseconds = timeSpec_diff_ns(start, end, freq);
+            printf("Time taken for linked list deletion: %lld nanoseconds\n", nanoseconds);
+        } else if (choice == 6) {
+            QueryPerformanceCounter(&start);
+            traverse_linkedlist(head);
+            QueryPerformanceCounter(&end);
+            long long nanoseconds = timeSpec_diff_ns(start, end, freq);
+            printf("Time taken for linked list traversal: %lld nanoseconds\n", nanoseconds);
+        } else if (choice == 7) {
+            QueryPerformanceCounter(&start);
+            bubblesort_array(arr, size);
+            QueryPerformanceCounter(&end);
+            long long nanoseconds = timeSpec_diff_ns(start, end, freq);
+            printf("Time taken for array sorting: %lld nanoseconds\n", nanoseconds);
+
+            QueryPerformanceCounter(&start);
+            bubblesort_linkedlist(head);
+            QueryPerformanceCounter(&end);
+            nanoseconds = timeSpec_diff_ns(start, end, freq);
+            printf("Time taken for linked list sorting: %lld nanoseconds\n", nanoseconds);
+        } else if (choice == 8) {
+            printf("Enter target element: ");
+            scanf("%d", &data);
+
+            bubblesort_array(arr, size);
+
+            QueryPerformanceCounter(&start);
+            int index_array = binary_search_array(arr, data, size);
+            QueryPerformanceCounter(&end);
+            long long nanoseconds = timeSpec_diff_ns(start, end, freq);
+            printf("Time taken for array binary search: %lld nanoseconds\n", nanoseconds);
+
+            if (index_array == -1) {
+                printf("Target element not found in array.\n");
+            } else {
+                printf("Target element found in array at index %d.\n", index_array);
+            }
+
+            QueryPerformanceCounter(&start);
+            int index_linkedlist = binary_search_linkedlist(head, data);
+            QueryPerformanceCounter(&end);
+            nanoseconds = timeSpec_diff_ns(start, end, freq);
+            printf("Time taken for linked list binary search: %lld nanoseconds\n", nanoseconds);
+
+            if (index_linkedlist == -1) {
+                printf("Target element not found in linked list.\n");
+            } else {
+                printf("Target element found in linked list at index %d.\n", index_linkedlist);
+            }
+        } else if (choice == 9) {
+            printf("Exiting...\n");
+        } else {
+            printf("Invalid choice. Please try again.\n");
+        }
+    } while (choice != 9);
+
+    free_linkedlist(head);
+
+    return 0;
+}
